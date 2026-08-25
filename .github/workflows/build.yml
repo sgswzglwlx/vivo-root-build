@@ -1,0 +1,36 @@
+name: build-preload
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'PROJECT (target 目录名)'
+        required: true
+        default: 'PD2426-BP2A.250605.031.A3-exact'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Android NDK r29
+        run: |
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/android-ndk-r29-linux.zip
+          unzip -q android-ndk-r29-linux.zip
+          echo "NDK_ROOT=/tmp/android-ndk-r29" >> "$GITHUB_ENV"
+          echo "NDK 版本:"
+          /tmp/android-ndk-r29/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang --version | head -1
+
+      - name: Build preload.so
+        run: |
+          make preload PROJECT="${{ inputs.project }}" NDK_ROOT="$NDK_ROOT"
+          echo "=== 编译产物 ==="
+          ls -la "build/${{ inputs.project }}/bin/"
+
+      - name: Upload preload.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: preload-so
+          path: build/${{ inputs.project }}/bin/preload.so
+          retention-days: 7
