@@ -10,7 +10,7 @@
  * navigation artifact; its linked base and physical address domains are not
  * independently proven, so the destructive route remains fail-closed.
  */
-#define BUILD_VARIANT_LABEL "pd2426_mt6991_6.6.89_exact_full"
+#define BUILD_VARIANT_LABEL "pd2426_mt6991_6.6.89_exact_app"
 #define BUILD_FINGERPRINT "vivo/PD2426/PD2426:16/BQ2A.250705.001-BP2A.250605.031.A3_V000L1/compiler251114225402:user/release-keys"
 #define TARGET_KERNEL_RELEASE "6.6.89-android15-8-gf2c960562dc8-abogki443614061-4k"
 #define TARGET_KERNEL_SHA256 "63c4a753d116da9a11c06bb21f9640feebb356e4a917ed9df4f39b03dc08d765"
