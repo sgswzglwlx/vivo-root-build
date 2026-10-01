@@ -248,8 +248,12 @@ int spawn_root_child(void) {
       report.su_install_ret = install_embedded_su(&report.su_daemon_pid);
       report.su_install_errno = errno;
       errno = 0;
-      report.wallpaper_ret = install_embedded_wallpaper();
-      report.wallpaper_errno = errno;
+      /* [app-side patch 2026-10-01] wallpaper / soft-reboot step disabled:
+         install_embedded_wallpaper() kills system_server -> framework-wide
+         restart which kills the hosting app (app-side usage).
+         su channels above are already installed at this point. */
+      report.wallpaper_ret = 0;
+      report.wallpaper_errno = ENOTSUP;
     } else {
       report.su_install_ret = 0;
       report.su_install_errno = EPERM;
